@@ -1,0 +1,8 @@
+.venv
+*.env
+*.pdf
+*.tf
+/terragoat
+*.json
+
+temp.py

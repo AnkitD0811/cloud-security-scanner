@@ -1,0 +1,6 @@
+reportlab
+langchain
+langgraph
+python-dotenv
+langchain-ollama
+langchain-google-genai
