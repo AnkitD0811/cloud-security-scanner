@@ -1,0 +1,50 @@
+{
+  "report_title": "Infrastructure as Code (IaC) Security Analysis Report",
+  "summary": "This report highlights potential security misconfigurations in the provided IaC template.",
+  "issues": [
+    {
+      "issue_name": "Publicly Accessible Buckets",
+      "severity": "High",
+      "possible_problems": [
+        "Data breaches",
+        "Unauthorized access"
+      ],
+      "remedies": [
+        "Use private buckets or restrict public access"
+      ]
+    },
+    {
+      "issue_name": "Missing Server-Side Encryption (SSE)",
+      "severity": "Medium",
+      "possible_problems": [
+        "Data breaches",
+        "Loss of sensitive data"
+      ],
+      "remedies": [
+        "Enable SSE for all buckets and objects"
+      ]
+    },
+    {
+      "issue_name": "Inadequate Bucket Access Control",
+      "severity": "High",
+      "possible_problems": [
+        "Unauthorized access",
+        "Data breaches"
+      ],
+      "remedies": [
+        "Implement bucket-level permissions and restrict access to authorized users"
+      ]
+    },
+    {
+      "issue_name": "Missing Logging Configuration",
+      "severity": "Medium",
+      "possible_problems": [
+        "Loss of audit logs",
+        "Difficulty in detecting security incidents"
+      ],
+      "remedies": [
+        "Configure logging for all buckets and objects"
+      ]
+    }
+  ]
+}

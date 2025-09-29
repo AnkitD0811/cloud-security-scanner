@@ -3,7 +3,6 @@
 *.pdf
 *.tf
 /terragoat
-*.json
 
 temp.py
 
