@@ -6,3 +6,5 @@
 *.json
 
 temp.py
+
+/secrets
