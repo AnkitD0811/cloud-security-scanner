@@ -1,0 +1,47 @@
+{
+  "file_scanned": "main.tf",
+  "tools_used": [
+    "checkov",
+    "tfsec"
+  ],
+  "structured_summary": {
+    "severity": {
+      "critical": 0,
+      "high": 30,
+      "medium": 16,
+      "low": 5,
+      "passed": 49
+    },
+    "key_findings": [
+      "S3 buckets are not blocking public access control lists (ACLs).",
+      "S3 buckets are not blocking public policies.",
+      "S3 buckets are not ignoring public ACLs.",
+      "S3 buckets are not restricting public access.",
+      "S3 buckets do not have default encryption enabled.",
+      "S3 buckets are not configured to use customer-managed encryption keys (KMS).",
+      "S3 buckets do not have access logging enabled.",
+      "S3 buckets do not have versioning enabled.",
+      "IAM policies allow 'ALL' or any AWS principal permissions to resources.",
+      "S3 buckets do not have event notifications enabled.",
+      "S3 buckets do not have cross-region replication enabled.",
+      "S3 buckets do not have a lifecycle configuration.",
+      "One S3 bucket is missing a defined 'aws_s3_bucket_public_access_block' resource."
+    ],
+    "recommendations": [
+      "Enable 'block_public_acls' for S3 bucket public access blocks.",
+      "Enable 'block_public_policy' for S3 bucket public access blocks.",
+      "Enable 'ignore_public_acls' for S3 bucket public access blocks.",
+      "Enable 'restrict_public_buckets' for S3 bucket public access blocks.",
+      "Configure S3 buckets to have default encryption enabled.",
+      "Configure S3 buckets to use customer-managed encryption keys (KMS).",
+      "Enable access logging for S3 buckets by adding a logging block.",
+      "Enable versioning for S3 buckets to protect against accidental/malicious removal or modification.",
+      "Review and restrict IAM policies that allow 'ALL' or '*' actions/principals to resources.",
+      "Configure S3 event notifications for S3 buckets.",
+      "Enable cross-region replication for S3 buckets.",
+      "Implement lifecycle configurations for S3 buckets.",
+      "Define an 'aws_s3_bucket_public_access_block' resource for all S3 buckets."
+    ],
+    "overall_security_posture": "Poor"
+  }
+}
