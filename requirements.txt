@@ -4,4 +4,5 @@ langgraph
 python-dotenv
 langchain-ollama
 langchain-google-genai
+langchain-community
 checkov
