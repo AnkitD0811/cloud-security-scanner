@@ -4,5 +4,5 @@
 *.tf
 /terragoat
 *.json
-
+__pycache__
 temp.py

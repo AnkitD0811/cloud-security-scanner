@@ -1,6 +1,5 @@
 from pydantic import BaseModel, Field
 from typing import Annotated, Literal, List, TypedDict
-import operator
 from datetime import datetime
 
 # ====== Data Templates =====

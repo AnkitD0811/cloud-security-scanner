@@ -5,9 +5,8 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
 from langgraph.graph import StateGraph, START, END
-from langchain.output_parsers import PydanticOutputParser
 
-from templates import SecurityIssue, SecurityReport, AIReport, GraphState
+from templates import AIReport, GraphState
 from prompts import report_generator_prompt
 from graph_functions import get_file, generate_report_issues, populate_metadata, save_results
 
