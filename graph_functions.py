@@ -11,7 +11,7 @@ def get_file(state: dict) -> dict:
     """
 
     print("Fetching code...")
-    path = state["file_path"]
+    path = state["input_file_path"]
 
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -52,10 +52,11 @@ def populate_metadata(state: dict) -> dict:
     issues = issues.issues
 
     # Generate report name (FileName + Timestamp)
-    file_name = state.get("file_path", "unknown_file").split("/")[-1]
+    file_name = state.get("input_file_path", "unknown_file").split("/")[-1]
     file_name = file_name.replace(".", "_")
     timestamp = datetime.now()
     name = f"{file_name}_{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}"
+    output_dir = "./outputs/" + name + "/" if state["output_dir"] == "" else state["output_dir"]
 
     # Compute summary
     summary = {
@@ -66,10 +67,10 @@ def populate_metadata(state: dict) -> dict:
     }
 
     # Populate state
-    state["name"] = name
-    state["summary"] = summary
-    state["timestamp"] = timestamp
-    state["file"] = state.get("file_path", "unknown_file")
+    # state["name"] = name
+    # state["summary"] = summary
+    # state["timestamp"] = timestamp
+    # state["file"] = state.get("file_path", "unknown_file")
 
     final_report = SecurityReport(
         name=name,
@@ -81,7 +82,7 @@ def populate_metadata(state: dict) -> dict:
     
     print("Metadata Populated")
 
-    return {"report": final_report}
+    return {"report": final_report, "output_dir": output_dir}
 
 
 def save_results(state: dict):
@@ -90,8 +91,8 @@ def save_results(state: dict):
     report = json.dumps(state["report"].model_dump(), indent=2, default=str)
     print(report)
 
-    output_file_path = f"./outputs/{state["report"].name}.json"
-    os.makedirs("./outputs", exist_ok=True)
+    output_file_path = state["output_dir"] + f"{state["report"].name}.json"
+    os.makedirs(state["output_dir"], exist_ok=True)
     with open(output_file_path, "w", encoding="utf-8") as f:
         f.write(report)
 

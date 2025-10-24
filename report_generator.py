@@ -64,5 +64,5 @@ if(len(sys.argv) != 2):
     Usage: python main.py <file-path>""")
 
 path = sys.argv[1]
-initial_state = {"file_path": path}
+initial_state = {"input_file_path": path, "output_dir": ""}
 final_state = workflow.invoke(initial_state)
