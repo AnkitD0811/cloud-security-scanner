@@ -1,9 +1,16 @@
+from langgraph.graph import END
+from langchain_core.messages import ToolMessage
+from langchain.messages import SystemMessage, HumanMessage
+from typing import Literal
+
+from templates import ReActGraphState, SecurityReport
+from prompts import react_thinker_prompt_human, react_thinker_prompt_system, react_writer_prompt
+
 from datetime import datetime
 import json
-from templates import SecurityReport
 import os
 
-# ===== Graph Node Functions =====
+# ===== Simple Graph Node Functions =====
 
 def get_file(state: dict) -> dict:
     """
@@ -55,7 +62,7 @@ def populate_metadata(state: dict) -> dict:
     file_name = state.get("input_file_path", "unknown_file").split("/")[-1]
     file_name = file_name.replace(".", "_")
     timestamp = datetime.now()
-    name = f"{file_name}_{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}"
+    name = f"{file_name}_{timestamp.strftime('%m-%d-%Y_%H:%M:%S')}"
     output_dir = "./outputs/" + name + "/" if state["output_dir"] == "" else state["output_dir"]
 
     # Compute summary
@@ -76,7 +83,7 @@ def populate_metadata(state: dict) -> dict:
         name=name,
         summary=summary,
         timestamp=timestamp,
-        file=state.get("file_path", "unknown_file"),
+        file=state.get("input_file_path", "unknown_file"),
         issues=issues
     )
     
@@ -93,6 +100,177 @@ def save_results(state: dict):
 
     output_file_path = state["output_dir"] + f"{state["report"].name}.json"
     os.makedirs(state["output_dir"], exist_ok=True)
+    with open(output_file_path, "w", encoding="utf-8") as f:
+        f.write(report)
+
+    print(f"\nReport saved to: {output_file_path}")
+
+# ===== ReAct Agent Node Functions =====
+
+def prepare_graph_state(state: ReActGraphState) -> dict:
+    """
+    Makes the following changes to the state:
+    1. Prepares the messages list with an initial SystemMessage & HumanMessage.
+    2. Prepares the output file directory.
+    3. Creates the output files directory if not there already.
+    4. Generates Output File Name.
+    5. Loads the IaC template as a string
+    """
+
+    # Generate Output File Name(FileName + Timestamp)
+    file_name = state.get("input_file_path", "unknown_file").split("/")[-1]
+    file_name = file_name.replace(".", "_")
+    timestamp = datetime.now()
+    final_name = f"{file_name}_{timestamp.strftime('%m-%d-%Y_%H:%M:%S')}"
+    output_dir = "./outputs/" + final_name + "/" if state["output_dir"] == "" else state["output_dir"]
+
+    # Generate Output Directory
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Load IaC template
+    path = state.get("input_file_path", "unknown_file")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            iac_code = f.read()
+    except FileNotFoundError:
+        print(f"Error: File not found at {path}")
+        iac_code = ""
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        iac_code = ""
+
+    # Initialize messages(short-term memory) with initial prompt
+    messages = [
+        SystemMessage(content=react_thinker_prompt_system),
+        HumanMessage(content=react_thinker_prompt_human.format(
+            file_path=state["input_file_path"],
+            iac_template=iac_code
+        ))
+    ]
+
+    return {
+        "messages": messages,
+        "output_file_name": final_name,
+        "output_dir": output_dir,
+        "iac_template": iac_code
+    }
+
+
+def llm_call(state: ReActGraphState, reason_llm) -> dict:
+    """
+    Reasoning LLM.
+    Takes the messages from state, decides whether to call a tool or generate Answer.
+    No prompt required as LLM can get all the context from messages.
+    Make sure to populate messages with an initial SystemMessage and HumanMessage.
+    """
+
+    print("Calling Agent(Thinking)...")
+
+    # Get memory
+    messages = state["messages"]
+    # Get next step from LLM
+    response = reason_llm.invoke(messages)
+
+    return {"messages": [response]}
+
+
+def tool_call(state: ReActGraphState, tool_list: dict) -> dict:
+    """
+    Performs the tool call as requested by the reasoning LLM.
+    """
+
+    print("Calling Tools...")
+    
+    # Get last message(list of tools to be called)
+    last_message = state["messages"][-1]
+    # List to store all tool outputs
+    tool_messages = []
+    # Iterate over all tools
+    for tool_call in last_message.tool_calls:
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+
+        try:
+            tool_func = tool_list[tool_name]
+            print(f"Running tool: {tool_name} with args: {tool_args}")
+            observation = tool_func.invoke(tool_args)
+            tool_messages.append(
+                ToolMessage(
+                    content=str(observation), # The tool's output
+                    tool_call_id=tool_call["id"] # The ID from the original call
+                )
+            )
+
+        except Exception as e:
+            print("Error occured while running tool")
+            print(e)
+            tool_messages.append(
+                ToolMessage(
+                    content=f"Error running tool: {e}",
+                    tool_call_id=tool_call["id"]
+                )
+            )
+
+    return {"messages": tool_messages}
+
+
+def should_continue(state: ReActGraphState) -> Literal["tool_call", "write_report"]:
+    """
+    Conditional Edge Logic to decide whether to generate final answer or not.
+    Environment -> Tool Call
+    """
+
+    if state["messages"][-1].tool_calls:
+        return "tool_call"
+    else:
+        return "write_report"
+
+def write_report(state: ReActGraphState, writer_llm) -> dict:
+    """
+    Writes the final report JSON from all the tool outputs.
+    """
+
+    writer_prompt_template = react_writer_prompt
+
+    tool_data = []
+    for message in state["messages"]:
+        if isinstance(message, ToolMessage):
+            tool_data.append(message.content)
+
+    chain = writer_prompt_template | writer_llm
+    ai_report = chain.invoke({"tool_data": "\n\n".join(tool_data)})
+    issues = ai_report.issues
+
+    summary = {
+            "count": len(issues),
+            "low": sum(1 for i in issues if i.severity == "Low"),
+            "medium": sum(1 for i in issues if i.severity == "Medium"),
+            "high": sum(1 for i in issues if i.severity == "High"),
+    }
+
+    final_report = SecurityReport(
+        name=state["output_file_name"],
+        summary=summary,
+        timestamp=datetime.now(),
+        file=state.get("input_file_path", "unknown_file"),
+        issues=ai_report
+    )
+
+    return {
+        "iac_issues": ai_report,
+        "report": final_report
+    }
+
+def save_final_results(state: ReActGraphState):
+    """
+    Save the final report as a json file
+    """
+
+    print("Generated Report:\n")
+    report = json.dumps(state["report"].model_dump(), indent=2, default=str)
+    print(report)
+
+    output_file_path = state["output_dir"] + state["output_file_name"] + ".json"
     with open(output_file_path, "w", encoding="utf-8") as f:
         f.write(report)
 

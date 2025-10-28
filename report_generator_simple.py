@@ -1,4 +1,5 @@
 # TO GENERATE A REPORT IN JSON OUTPUT FROM IAC
+# Simple Sequential Flow with no tools
 
 #===== Importing Libraries & Env Variables======
 
@@ -7,7 +8,7 @@ from langchain_ollama import ChatOllama
 from langgraph.graph import StateGraph, START, END
 
 from templates import AIReport, GraphState
-from prompts import report_generator_prompt
+from prompts import simple_report_generator_prompt
 from graph_functions import get_file, generate_report_issues, populate_metadata, save_results
 
 from dotenv import load_dotenv
@@ -36,7 +37,7 @@ llm = ChatGoogleGenerativeAI(
 
 # --- Prompt ---
 
-prompt = report_generator_prompt
+prompt = simple_report_generator_prompt
 
 # ===== Graph Creation =====
 
