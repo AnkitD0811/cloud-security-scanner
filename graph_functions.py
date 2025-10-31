@@ -144,6 +144,8 @@ def prepare_graph_state(state: ReActGraphState) -> dict:
         SystemMessage(content=react_thinker_prompt_system),
         HumanMessage(content=react_thinker_prompt_human.format(
             file_path=state["input_file_path"],
+            output_dir=output_dir,
+            output_file_name=final_name,
             iac_template=iac_code
         ))
     ]
@@ -253,7 +255,7 @@ def write_report(state: ReActGraphState, writer_llm) -> dict:
         summary=summary,
         timestamp=datetime.now(),
         file=state.get("input_file_path", "unknown_file"),
-        issues=ai_report
+        issues=issues
     )
 
     return {

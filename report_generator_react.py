@@ -17,11 +17,13 @@ from functools import partial
 
 load_dotenv()
 
+from langgraph.prebuilt import ToolNode
+
 # ===== Defining Tool List =====
 
-tool_list = {
-    "checkov_tool" : checkov_tool
-}
+tool_list = [checkov_tool]
+
+tool_node = ToolNode(tools=tool_list)
 
 # ===== Defining Agents to be Used =====
 
@@ -56,7 +58,10 @@ agent = StateGraph(ReActGraphState)
 
 agent.add_node("prepare_graph_state", prepare_graph_state)
 agent.add_node("llm_call", partial(llm_call, reason_llm = reason_llm))
-agent.add_node("tool_call", partial(tool_call, tool_list = tool_list))
+
+# agent.add_node("tool_call", partial(tool_call, tool_list = tool_list))
+agent.add_node("tool_call", tool_node)
+
 agent.add_node("write_report", partial(write_report, writer_llm = writer_llm))
 agent.add_node("save_final_results", save_final_results)
 

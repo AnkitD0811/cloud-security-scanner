@@ -81,6 +81,10 @@ Please analyze the following IaC template.
 
 **File Path:** {file_path}
 
+**Output File Directory:** {output_dir}
+
+**Output File Path:** {output_file_name}
+
 **File Content:**
 
 {iac_template}
@@ -127,7 +131,7 @@ You MUST follow these rules to populate each `SecurityIssue`:
 ---
 
 **Final Output Rules:**
-* If the raw data indicates no issues were found, you must return: `{"issues": []}`
+* If the raw data indicates no issues were found, you must return: `{{"issues": []}}`
 * Do not add commentary. Only return the final JSON.
 """
 
