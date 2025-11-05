@@ -277,3 +277,5 @@ def save_final_results(state: ReActGraphState):
         f.write(report)
 
     print(f"\nReport saved to: {output_file_path}")
+
+    print(f"\nFINAL_REPORT_PATH: {output_file_path}")

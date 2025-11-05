@@ -6,3 +6,5 @@ langchain-ollama
 langchain-google-genai
 langchain-community
 checkov
+"fastapi[standard]"
+"uvicorn[standard]"
