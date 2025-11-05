@@ -68,7 +68,7 @@ def checkov_tool(input_file_path: str, output_dir: str, output_file_name: str) -
             f.write(final_json_str)
 
         # Rename the file
-        new_name = "cehckov_" + output_dir + output_file_name + ".json"
+        new_name = output_dir + "checkov_" + output_file_name + ".json"
         os.rename(output_dir + "results_json.json", new_name)
 
         return final_json_str
